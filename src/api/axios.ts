@@ -1,10 +1,12 @@
 import axios from 'axios';
 
-// Osnovna konfiguracija ka Spring Boot backendu
+// Osnovna konfiguracija — bez baseURL jer koristimo Vite proxy
+// U development-u: Vite proxy prosleđuje /auth i /api ka localhost:8080
+// U produkciji: ovde ćemo staviti pravi URL (Render)
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // Kasnije ovde ide Render URL
+  //baseURL: 'http://localhost:8080',
   headers: {
-    'Content-Type': 'json',
+    'Content-Type': 'application/json',
   },
 });
 
@@ -16,5 +18,57 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Response Interceptor: Otpakivanje "koverte" pri prijemu odgovora
+api.interceptors.response.use(
+  (response) => {
+    // Axios pakuje odgovor u svoje 'data' polje.
+    // Naš Spring Boot backend to dodatno pakuje u svoje 'data' polje { success, message, data: {...} }.
+    // Zato proveravamo da li postoji response.data.data i ako postoji, vraćamo ga direktno!
+    if (response.data && response.data.data) {
+      response.data = response.data.data;
+    }
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Ako smo dobili 401, a nismo već pokušali da osvežimo token 
+    // (_retry služi da ne uđemo u beskonačnu petlju)
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      const refreshToken = localStorage.getItem('refresh_token');
+
+      if (refreshToken) {
+        try {
+          // Pokušavamo da osvežimo token!
+          // Koristimo običan axios (ne naš 'api') da ne bismo okinuli iste interceptore u krug
+          const refreshResponse = await axios.post('/auth/refresh', { refreshToken: refreshToken });
+          // Običan axios ne otpakuje kovertu, pa moramo sami .data.data
+          const newTokens = refreshResponse.data.data;
+
+          // Sačuvaj nove tokene u LocalStorage
+          localStorage.setItem('jwt_token', newTokens.accessToken);
+          localStorage.setItem('refresh_token', newTokens.refreshToken);
+
+          // Ažuriraj propali (originalni) zahtev novim tokenom i ponovi ga!
+          originalRequest.headers['Authorization'] = `Bearer ${newTokens.accessToken}`;
+          return api(originalRequest);
+        } catch (refreshError) {
+          // Ako je i Refresh Token istekao ili nevažeći, onda definitivno izbacujemo korisnika
+          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('refresh_token');
+          window.location.href = '/login';
+        }
+      } else {
+        // Nema refresh tokena uopšte, odmah izbacuj
+        localStorage.removeItem('jwt_token');
+        localStorage.removeItem('refresh_token');
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

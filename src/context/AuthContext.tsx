@@ -1,12 +1,14 @@
 import React, { createContext, useState, useContext, type ReactNode } from 'react';
-import type { AuthResponse, LoginRequest } from '../types/auth';
-import { loginApi } from '../api/authService';
+import type { LoginRequest, UserPayload } from '../types/auth';
+import { loginApi, logoutApi } from '../api/authService';
+import {jwtDecode} from 'jwt-decode'; 
 
 // 1. Definišemo šta sve Context pruža celoj aplikaciji
 interface AuthContextType {
-  user: AuthResponse | null;
+  token: string | null;
+  user: UserPayload | null; //Cela app ima info o korisniku
   login: (credentials: LoginRequest) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -15,41 +17,64 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // 3. Provider komponenta koja obavija celu aplikaciju
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthResponse | null>(() => {
-    // Pri pokretanju, proveri da li već imamo sačuvan token i podatke u LocalStorage-u
-    const savedToken = localStorage.getItem('jwt_token');
-    const savedUsername = localStorage.getItem('username');
-    const savedRole = localStorage.getItem('role');
+  const [token, setToken] = useState<string | null>(() => {
+    // Pri pokretanju, proveri da li već imamo sačuvan token u LocalStorage-u
+    return localStorage.getItem('jwt_token');
+  });
 
-    if (savedToken && savedUsername && savedRole) {
-      return { token: savedToken, username: savedUsername, role: savedRole };
+  //Dodavanje posebnog stanja za trenutnog korisnika, koje se inicijalizuje iz tokena ako postoji
+  const [user, setUser] = useState<UserPayload | null>(() => {
+    const savedToken = localStorage.getItem('jwt_token');
+    if (savedToken) {
+      try {
+        //Ako postoji token pri učitavanju, odmah ga dekodiraj i postavi user state
+        return jwtDecode<UserPayload>(savedToken);
+      } catch (error) {
+        return null; // Ako je token nevažeći, vrati null 
+      }
     }
     return null;
   });
+    
 
   // Funkcija za prijavu
   const login = async (credentials: LoginRequest) => {
     const data = await loginApi(credentials);
     
-    // Sačuvaj u pregledaču (da ostane ulogovan i ako osveži stranicu)
-    localStorage.setItem('jwt_token', data.token);
-    localStorage.setItem('username', data.username);
-    localStorage.setItem('role', data.role);
+    // Sačuvaj tokene u pregledaču
+    localStorage.setItem('jwt_token', data.accessToken);
+    localStorage.setItem('refresh_token', data.refreshToken);
 
     // Ažuriranje React stanja
-    setUser(data);
+    setToken(data.accessToken);
+
+    //Dekodiranje tokena na licu mesta i čuvamo podatke korisnika
+    const decodeUser = jwtDecode<UserPayload>(data.accessToken);
+    setUser(decodeUser); 
   };
 
   // Funkcija za odjavu
-  const logout = () => {
+    const logout = async () => {
+    const refreshToken = localStorage.getItem('refresh_token');
+    
+    // 1. Prvo javi backendu da uništi token u bazi (ako postoji)
+    if (refreshToken) {
+      try {
+        await logoutApi(refreshToken);
+      } catch (error) {
+        console.error("Greška pri odjavi na serveru", error);
+      }
+    }
+
+    // 2. Zatim ga izbriši iz browsera i očisti stanje
     localStorage.removeItem('jwt_token');
-    localStorage.removeItem('username');
-    localStorage.removeItem('role');
+    localStorage.removeItem('refresh_token');
+    setToken(null);
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ token, user,login, logout, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,64 +1,85 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import './LoginPage.css';
 
 export const LoginPage: React.FC = () => {
-  // 1. Lokalne promenljive za praćenje onoga što korisnik kuca u input polja
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // 2. Izvlačenje funkcije za login iz našeg AuthContext-a i navigate za promenu rute
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // 3. Funkcija koja se okida kada korisnik klikne na dugme ili pritisne Enter
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Sprečava klasično osvežavanje stranice
+    e.preventDefault();
     setError('');
+    setIsLoading(true);
 
     try {
-      await login({ username, password });
-      // Ako login uspe, preusmeri korisnika na Dashboard
+      await login({ email, password });
       navigate('/dashboard');
     } catch (err) {
-      setError('Neispravno korisničko ime ili lozinka.');
+      setError('Neispravna email adresa ili lozinka.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
-      <h2>Prijava na sistem</h2>
-      
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Korisničko ime:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
+    <div className="login-container">
+      <div className="login-card">
+        <div className="login-header">
+          <div className="login-icon">🎓</div>
+          <h1 className="login-title">Student Management</h1>
+          <p className="login-subtitle">Prijavite se na sistem</p>
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px' }}>Lozinka:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
-          />
-        </div>
+        {error && <div className="login-error">{error}</div>}
 
-        <button type="submit" style={{ width: '100%', padding: '10px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          Prijavi se
-        </button>
-      </form>
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label htmlFor="email" className="input-label">
+              Email adresa
+            </label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="vas@email.com"
+              required
+              className="input-field"
+              autoComplete="email"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password" className="input-label">
+              Lozinka
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Unesite lozinku"
+              required
+              className="input-field"
+              autoComplete="current-password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="btn btn-primary login-btn"
+          >
+            {isLoading ? 'Prijavljivanje...' : 'Prijavi se'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

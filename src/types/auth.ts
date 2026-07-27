@@ -1,12 +1,18 @@
 // Sta se šalje backendu prilikom prijave
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
 // Šta backend vraća nakon uspešne prijave
 export interface AuthResponse {
-  token: string;
-  username: string;
-  role: string;
+  accessToken: string;   
+  refreshToken: string;  
+}
+
+// Šta se sve nalazi otpakovano unutar JWT Tokena
+export interface UserPayload {
+  sub: string;  // Email korisnika (po JWT standardu to je 'sub' - subject)
+  role: string; // ROLE_ADMIN ili ROLE_USER (ili samo ADMIN)
+  name: string; // Puno ime koje se nalazi u JWT tokenu;
 }

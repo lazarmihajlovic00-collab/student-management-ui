@@ -4,6 +4,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { PrivateRoute } from './components/PrivateRoute';
 import { Layout } from './components/Layout';
+import { StudentsPage } from './pages/StudentsPage';
 
 function App() {
   return (
@@ -25,9 +26,9 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
-            {/* Ovde ćemo dodavati buduće stranice:
+            {// Ovde se dodaju buduće stranice:
             <Route path="/students" element={<StudentsPage />} />
-            <Route path="/courses" element={<CoursesPage />} />
+            /*<Route path="/courses" element={<CoursesPage />} />
             <Route path="/departments" element={<DepartmentsPage />} />
             <Route path="/grades" element={<GradesPage />} />
             */}

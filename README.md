@@ -1,32 +1,97 @@
-# React + TypeScript + Vite
+# 🎓 Student Management UI (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern, responsive Single Page Application (SPA) built with **React**, **TypeScript**, and **Vite**.  
+Designed for real-time student administration, grade tracking, department management, and course enrollment with role-based access control and seamless JWT authentication lifecycle management.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Features
 
-## React Compiler
+- **Single Page Application (SPA):** Fast, client-side routing via `react-router-dom` with custom dark-themed design system.
+- **Robust Authentication & Interceptors:**
+  - JWT token storage with auto-refresh mechanism using custom **Axios Interceptors**.
+  - Transparent `401 Unauthorized` handling via background refresh token rotation without logging out active users.
+  - Global `403 Forbidden` response interception providing user-friendly role access notifications.
+- **Role-Based Access Control (RBAC):**
+  - **ADMIN:** Full CRUD operations across Students, Departments, Courses, and Grades, plus course assignment, student status updates (Graduate/Suspend/Activate), and GPA calculations.
+  - **USER:** Read-only access to records, search, and system statistics.
+- **Dashboard & Analytics:** Live system overview displaying aggregate stats (students, courses, departments, grades) directly fetched from backend.
+- **Advanced Management Modals:**
+  - Multi-section modals for student department assignment, course enrollment, status transitions, and GPA calculation.
+  - Course-to-Department dynamic binding and validation.
+  - Dual-mode search functionality (search by Name or Email).
+- **Pagination & Error Handling:** Server-side pagination controls and contextual user notifications for validation errors.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the Oxlint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- **Core & Build:** React 18, TypeScript, Vite
+- **Routing & HTTP:** React Router v6, Axios
+- **Styling:** CSS3 (Vanilla CSS with CSS Variables, Dark Mode, Responsive Layouts)
+- **Tooling:** ESLint, Oxlint
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+---
+
+## 🏗️ Project Structure
+
+```text
+src/
+├── api/             # Axios instance setup, interceptors, and feature service APIs
+│   ├── axios.ts         # Central HTTP client with JWT & refresh interceptors
+│   ├── authService.ts   # Login, Register, Logout endpoints
+│   ├── studentService.ts# Student CRUD, search, department/course assignment, GPA
+│   ├── courseService.ts # Course management API
+│   └── departmentService.ts # Department management API
+├── context/         # AuthContext for global user authentication state
+├── pages/           # Page components (Dashboard, Students, Courses, Departments, Grades, Login, Register)
+├── types/           # TypeScript interfaces (Student, Course, Department, Grade, Auth)
+├── App.tsx          # Router configuration & protected routes
+└── index.css        # Global CSS variables & design tokens
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## 🔒 Authentication Flow & Interceptors
+
+The frontend seamlessly handles authentication lifecycle:
+1. **Login & Register:** Receives JWT Access Token and Refresh Token upon authentication.
+2. **Request Interceptor:** Automatically attaches `Authorization: Bearer <token>` to every outgoing request.
+3. **Response Interceptor:**
+   - Unpacks API response envelope (`{ success, message, data }`).
+   - If a request returns `401 Unauthorized`, it attempts a token refresh using `/auth/refresh`. If successful, it retries the original request seamlessly.
+   - If a request returns `403 Forbidden`, it injects a user-friendly permission error notice.
+
+---
+
+## 💻 Local Setup & Execution
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+
+### Installation & Run
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/lazarmihajlovic00-collab/student-management-ui.git
+   cd student-management-ui
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Start Development Server:**
+   ```bash
+   npm run dev
+   ```
+   The application will be available at `http://localhost:5173`.
+
+---
+
+## 🔗 Related Repositories
+
+- **Backend API Repository:** [student-management-api](https://github.com/lazarmihajlovic00-collab/student-management-api) (Spring Boot 3, Java 21, PostgreSQL, Docker, CI/CD)

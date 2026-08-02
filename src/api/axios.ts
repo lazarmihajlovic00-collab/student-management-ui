@@ -1,10 +1,8 @@
 import axios from 'axios';
 
-// Osnovna konfiguracija — bez baseURL jer koristimo Vite proxy
-// U development-u: Vite proxy prosleđuje /auth i /api ka localhost:8080
-// U produkciji: ovde ćemo staviti pravi URL (Render)
 const api = axios.create({
-  //baseURL: 'http://localhost:8080',
+  // Ako postoji produkcijska URL adresa koristi nju, a ako radimo lokalno koristi localhost
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080', 
   headers: {
     'Content-Type': 'application/json',
   },
@@ -67,6 +65,15 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
+
+    // NOVO: Ako je status 403, znači da korisnik nema ulogu (Role.ADMIN) za tu akciju
+    if (error.response?.status === 403) {
+      if (!error.response.data) {
+        error.response.data = {};
+      }
+      error.response.data.message = "Nemate privilegije za ovu akciju (Samo Admin).";
+    }
+
     return Promise.reject(error);
   }
 );

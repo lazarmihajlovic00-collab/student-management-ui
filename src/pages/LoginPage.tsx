@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './LoginPage.css';
+
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -78,6 +79,10 @@ export const LoginPage: React.FC = () => {
           >
             {isLoading ? 'Prijavljivanje...' : 'Prijavi se'}
           </button>
+                    <div style={{ textAlign: 'center', marginTop: '15px' }}>
+            <span style={{ color: 'var(--color-text-secondary)' }}>Nemate nalog? </span>
+            <Link to="/register" style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 'bold' }}>Registrujte se</Link>
+          </div>
         </form>
       </div>
     </div>

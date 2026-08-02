@@ -16,3 +16,9 @@ export interface UserPayload {
   role: string; // ROLE_ADMIN ili ROLE_USER (ili samo ADMIN)
   name: string; // Puno ime koje se nalazi u JWT tokenu;
 }
+
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password: string;
+}

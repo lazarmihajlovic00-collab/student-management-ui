@@ -5,6 +5,10 @@ import { DashboardPage } from './pages/DashboardPage';
 import { PrivateRoute } from './components/PrivateRoute';
 import { Layout } from './components/Layout';
 import { StudentsPage } from './pages/StudentsPage';
+import { DepartmentsPage } from './pages/DepartmentsPage';
+import { CoursesPage } from './pages/CoursesPage';
+import { GradesPage } from './pages/GradesPage';
+import { RegisterPage } from './pages/RegisterPage';
 
 function App() {
   return (
@@ -16,6 +20,7 @@ function App() {
 
           {/* Javna ruta — dostupna svima */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* Zaštićene rute — sve unutar Layout-a */}
           <Route
@@ -26,12 +31,10 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<DashboardPage />} />
-            {// Ovde se dodaju buduće stranice:
             <Route path="/students" element={<StudentsPage />} />
-            /*<Route path="/courses" element={<CoursesPage />} />
             <Route path="/departments" element={<DepartmentsPage />} />
+            <Route path="/courses" element={<CoursesPage />} />
             <Route path="/grades" element={<GradesPage />} />
-            */}
           </Route>
         </Routes>
       </BrowserRouter>
